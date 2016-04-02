@@ -17,6 +17,7 @@
 #include <tchar.h>
 #include <fstream> 
 #include <iostream>
+#include <Shlobj.h>
 
 // TODO: Verweisen Sie hier auf zusätzliche Header, die Ihr Programm erfordert
 //#include <string.h>

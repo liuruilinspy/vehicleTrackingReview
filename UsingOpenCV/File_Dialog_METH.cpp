@@ -8,6 +8,7 @@ FileDialog::FileDialog(HWND parent_handle)
 	my_hwnd = parent_handle;
 	//char szFileName[MAX_PATH] ="";
 	strcpy_s(szFileName,"");
+	strcpy_s(szImgFolderName, "");
 	//strcpy(Path_only,"");
 	ZeroMemory(&my_ofn,sizeof(my_ofn));
 
@@ -22,20 +23,59 @@ FileDialog::FileDialog(HWND parent_handle)
 	//p_szFileName = szFileName;
 	//strcpy(p_szFileName,szFileName);
 	p_szFileName = szFileName;
+	p_szImgFolderName = szImgFolderName;
+
 	h_Find =INVALID_HANDLE_VALUE;
 	dummy_str ="";
 }
 
+bool FileDialog::OpenDirectory(){
+	BROWSEINFO   bi;
+	ZeroMemory(&bi, sizeof(bi));
+	char   szDisplayName[MAX_PATH];
+	strcpy_s(szDisplayName, "");
+
+	bi.hwndOwner = NULL;
+	bi.pidlRoot = NULL;
+	bi.pszDisplayName = szDisplayName;
+	bi.lpszTitle = _T("Please select the folder storing the result images :");
+	bi.ulFlags = BIF_RETURNONLYFSDIRS;
+	bi.lParam = NULL;
+	bi.iImage = 0;
+
+	strcpy_s(szImgFolderName, "");
+	LPITEMIDLIST   pidl = SHBrowseForFolder(&bi);
+	if (NULL != pidl)
+	{
+		BOOL bRet = SHGetPathFromIDList(pidl, szImgFolderName);
+		if (FALSE == bRet){
+			MessageBox(my_hwnd, "Didn't work out right", "SORRY", MB_OK);
+			return false;
+		}
+		/*else{
+			std::vector<string> allfiles;
+			GetFilesInDirectory(allfiles, szImgFolderName);
+			string allfileNames = "";
+			for (string fileName : allfiles){
+				allfileNames += fileName + ",";
+			}
+			MessageBox(my_hwnd, allfileNames.c_str(), "Good", MB_OK);
+		*/
+	}
+
+	return true;
+}
+
 bool FileDialog::OpenFile()
 {
- my_ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
- bool tof = GetOpenFileName(&my_ofn);
- if(tof == false)
- {
-   MessageBox(my_hwnd,"Didn't work out right","SORRY",MB_OK);
-   return false;
- }
- return true;
+	my_ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+	bool tof = GetOpenFileName(&my_ofn);
+	if (tof == false)
+	{
+		MessageBox(my_hwnd, "Didn't work out right", "SORRY", MB_OK);
+		return false;
+	}
+	return true;
 }
 bool FileDialog::SaveFile()
 {
@@ -79,6 +119,37 @@ char* FileDialog::Get_Name()
 {
   return p_szFileName;
 	// return szFileName;
+}
+
+char* FileDialog::Get_ImgFolder_Name()
+{
+	return p_szImgFolderName;
+	// return szFileName;
+}
+
+void FileDialog::GetFilesInDirectory(std::vector<string> &out, const string &directory, const string extension)
+{
+	HANDLE dir;
+	WIN32_FIND_DATA file_data;
+
+	if ((dir = FindFirstFile((directory + "/*" + extension).c_str(), &file_data)) == INVALID_HANDLE_VALUE)
+		return; /* No files found */
+
+	do {
+		const string file_name = file_data.cFileName;
+		const string full_file_name = directory + "/" + file_name;
+		const bool is_directory = (file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+
+		if (file_name[0] == '.')
+			continue;
+
+		if (is_directory)
+			continue;
+
+		out.push_back(file_name);
+	} while (FindNextFile(dir, &file_data));
+
+	FindClose(dir);
 }
 
 void FileDialog::PrintPathName(int posX, int posY)

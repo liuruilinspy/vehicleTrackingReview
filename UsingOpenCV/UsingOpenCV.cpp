@@ -80,27 +80,42 @@ LRESULT CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 
 //GLOBAL USERDEFINED VARIABLES
 
-HWND hWnd; //handle of Main Window
+ HWND hWnd; //handle of Main Window
 
  //handles for controls // placed on main window; see WM_CREATE
- HWND path_caption_handle;
- HWND pathinfo_handle; 
+ HWND img_path_caption_handle;
+ HWND img_pathinfo_handle; 
+ HWND video_path_caption_handle;
+ HWND video_pathinfo_handle;
+
+ HWND videoName_handle;
+ HWND trackId_handle;
  HWND from_caption_handle; 
  HWND to_caption_handle;
  HWND from_handle; 
  HWND to_handle;
+
+ HWND framediff_caption_handle;
+ HWND distance_caption_handle;
+ HWND framediff_handle;
+ HWND distance_handle;
+
  HWND button_handle; 
+ HWND leftnavi_button_handle;
+ HWND rightnavi_button_handle;
  HMENU menu_handle;		 
  HWND track_bar_handle;
  HWND trackbar_info_handle;
  HWND dialog_handle;
  HWND check_box_handles[4];
 
+ HWND save_button_handle;
+ HWND merge_checkbox_handle;
+ HWND spot_handle;
+
 // for File Dialog Operations
 FileDialog * fd; //Pointer to FileDialog Class, will be intialized in WM_CREATE
 char PathName[MAX_PATH]; //char stores pathname of FileDialog
-
-
 
 // Variables for Video operations (see also Image_OP and Video_OP in OpenCv_Video_OP DEF and METH)
 Video_OP * vio;
@@ -110,6 +125,10 @@ string movie_file_name;
 //Current folder
 char lpBuffer[250];
 
+//Variables for Image matching
+string imagefolderPath;
+string videofolderPath;
+std::vector<string> imageNameList;
 
 //GLOBAL USERDEFINED FUNCTIONS
 
@@ -119,14 +138,12 @@ void Set_Text(HWND handle, char* str);
 void Display_String(HWND handle,int where_x, int where_y, char* str);
 
 
-
-
 int APIENTRY _tWinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPTSTR    lpCmdLine,
-                     int       nCmdShow)
+	HINSTANCE hPrevInstance,
+	LPTSTR    lpCmdLine,
+	int       nCmdShow)
 {
- 	// TODO //Put in code here
+	// TODO //Put in code here
 	MSG msg;
 	HACCEL hAccelTable;
 
@@ -136,28 +153,28 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	MyRegisterClass(hInstance);
 
 	// intialize application
-	if (!InitInstance (hInstance, nCmdShow)) 
+	if (!InitInstance(hInstance, nCmdShow))
 	{
 		return FALSE;
 	}
 
 	hAccelTable = LoadAccelerators(hInstance, (LPCTSTR)IDC_USINGOPENCV);
 
-    //main message loop
-	while (GetMessage(&msg, NULL, 0, 0)) 
+	//main message loop
+	while (GetMessage(&msg, NULL, 0, 0))
 	{
 
-	 // if(!IsDialogMessage(dialog_handle,&msg))//EXTRA LINE OF CODE FOR MODELESS DIALOG MESSAGES // see [REF]
-	 //{//IF 1
-		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) 
+		// if(!IsDialogMessage(dialog_handle,&msg))//EXTRA LINE OF CODE FOR MODELESS DIALOG MESSAGES // see [REF]
+		//{//IF 1
+		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-	 //}//END IF 1
+		//}//END IF 1
 	}
 
-	return (int) msg.wParam;
+	return (int)msg.wParam;
 }
 
 
@@ -172,19 +189,19 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 {
 	WNDCLASSEX wcex;
 
-	wcex.cbSize = sizeof(WNDCLASSEX); 
+	wcex.cbSize = sizeof(WNDCLASSEX);
 
-	wcex.style			= CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc	= (WNDPROC)WndProc;
-	wcex.cbClsExtra		= 0;
-	wcex.cbWndExtra		= 0;
-	wcex.hInstance		= hInstance;
-	wcex.hIcon			= LoadIcon(hInstance, (LPCTSTR)IDI_USINGOPENCV);
-	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
-	wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
-	wcex.lpszMenuName	= (LPCTSTR)IDC_USINGOPENCV;
-	wcex.lpszClassName	= szWindowClass;
-	wcex.hIconSm		= LoadIcon(wcex.hInstance, (LPCTSTR)IDI_SMALL);
+	wcex.style = CS_HREDRAW | CS_VREDRAW;
+	wcex.lpfnWndProc = (WNDPROC)WndProc;
+	wcex.cbClsExtra = 0;
+	wcex.cbWndExtra = 0;
+	wcex.hInstance = hInstance;
+	wcex.hIcon = LoadIcon(hInstance, (LPCTSTR)IDI_USINGOPENCV);
+	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wcex.lpszMenuName = (LPCTSTR)IDC_USINGOPENCV;
+	wcex.lpszClassName = szWindowClass;
+	wcex.hIconSm = LoadIcon(wcex.hInstance, (LPCTSTR)IDI_SMALL);
 
 	return RegisterClassEx(&wcex);
 }
@@ -198,25 +215,23 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   
+	hInst = hInstance; // handle of instance
 
-   hInst = hInstance; // handle of instance
+	//hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+	//  CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL); //OR
+	hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,
+		CW_USEDEFAULT, 0, 550, 380, NULL, NULL, hInstance, NULL);
 
-   //hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-    //  CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL); //OR
-   hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,
-     CW_USEDEFAULT, 0, 530, 300, NULL, NULL, hInstance, NULL);
-   
 
-   if (!hWnd)
-   {
-      return FALSE;
-   }
+	if (!hWnd)
+	{
+		return FALSE;
+	}
 
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
+	ShowWindow(hWnd, nCmdShow);
+	UpdateWindow(hWnd);
 
-   return TRUE;
+	return TRUE;
 }
 
 //
@@ -235,11 +250,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	PAINTSTRUCT ps;
 	HDC hdc;
 
-	switch (message) 
+	switch (message)
 	{
 	case WM_COMMAND:
-		wmId    = LOWORD(wParam); 
-		wmEvent = HIWORD(wParam); 
+		wmId = LOWORD(wParam);
+		wmEvent = HIWORD(wParam);
 		// handling commands from menu and controls (e.g. buttons)
 		switch (wmId)
 		{
@@ -247,170 +262,197 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			DialogBox(hInst, (LPCTSTR)IDD_ABOUTBOX, hWnd, (DLGPROC)About);
 			break;
 
-			case IDC_BUTTON_DO_IT:
+		case IDC_BUTTON_DO_IT:
+		{
+			// checks if user has chosen "Play Movie" or "Write Movie" in Menu Select Command
+			UINT res = GetMenuState(menu_handle, IDM_PLAY_MOV, MF_BYCOMMAND);
+			char buf[15];
+
+			// x is not used; fills buffer with text of button ("GO")
+			int x = GetWindowText(button_handle, buf, 15);
+
+			// depending on which submenu is selected => Play_Video or Write_Video
+			if (res == MF_CHECKED) //if(1)
+			{
+
+				if (strcmp(buf, "GO") == 0)//if (2) checks, whether char strings are identical
 				{
-			     // checks if user has chosen "Play Movie" or "Write Movie" in Menu Select Command
-                 UINT res = GetMenuState(menu_handle,IDM_PLAY_MOV,MF_BYCOMMAND);
-				  char buf[15];
-
-				  // x is not used; fills buffer with text of button ("GO")
-				  int x = GetWindowText(button_handle,buf,15);
-
-				  // depending on which submenu is selected => Play_Video or Write_Video
-				  if (res == MF_CHECKED) //if(1)
-				  {
-					
-					if( strcmp(buf,"GO")==0)//if (2) checks, whether char strings are identical
-					 {
-			            vio->Play_Video(Get_Number(from_handle),Get_Number(to_handle), Image_OP::my_ROI);
-						Set_Text(button_handle,"FIN");
-			         }
-					 else
-					  {
-						vio->Stop_Video();
-						
-					  }		
-				  
-				  }//End If(1)
-				  else //else belonging to if(1)
-				  {
-				      if( strcmp(buf,"GO")==0)//if (2) checks, whether char strings are identical
-					 {
-						Set_Text(button_handle,"WRITING");
-						if(fd->SaveFile())
-						{
-						  save_file_movie = fd->Get_Name();
-						}
-
-						Set_Text(pathinfo_handle,save_file_movie);
-			            if (vio->Write_Video(Get_Number(from_handle),Get_Number(to_handle), Image_OP::my_ROI, save_file_movie))
-						Set_Text(button_handle,"GO");
-			         }
-				  
-				  }//End else (1)
+					vio->Play_Video(Get_Number(from_handle), Get_Number(to_handle), Image_OP::my_ROI);
+					Set_Text(button_handle, "FIN");
 				}
-	            break;
-			
+				else
+				{
+					vio->Stop_Video();
+				}
+
+			}//End If(1)
+			else //else belonging to if(1)
+			{
+				if (strcmp(buf, "GO") == 0)//if (2) checks, whether char strings are identical
+				{
+					Set_Text(button_handle, "WRITING");
+					if (fd->SaveFile())
+					{
+						save_file_movie = fd->Get_Name();
+					}
+
+					Set_Text(video_pathinfo_handle, save_file_movie);
+					if (vio->Write_Video(Get_Number(from_handle), Get_Number(to_handle), Image_OP::my_ROI, save_file_movie))
+						Set_Text(button_handle, "GO");
+				}
+
+			}//End else (1)
+		}
+		break;
+
+		case IDM_IMAGEOP_LOADIMAGEFOLDER:
+		{
+			if (fd->OpenDirectory()){
+				imagefolderPath = fd->Get_ImgFolder_Name();
+				fd->GetFilesInDirectory(imageNameList, imagefolderPath, ".jpg");
+				Set_Text(img_pathinfo_handle, (char*)imagefolderPath.c_str());
+				/*string allfileNames = "";
+				for (string fileName : imageNameList){
+					allfileNames += fileName + ",";
+				}
+				MessageBox(hWnd, allfileNames.c_str(), "Good", MB_OK);*/
+			}
+		}
+		break;
+
+		case IDM_IMAGEOP_SELECTVIDEOFOLDER:
+		{
+			if (fd->OpenDirectory()){
+				videofolderPath = fd->Get_ImgFolder_Name();
+				//fd->GetFilesInDirectory(imageNameList, imagefolderPath, ".jpg");
+				Set_Text(video_pathinfo_handle, (char*)videofolderPath.c_str());
+				/*string allfileNames = "";
+				for (string fileName : imageNameList){
+				allfileNames += fileName + ",";
+				}
+				MessageBox(hWnd, allfileNames.c_str(), "Good", MB_OK);*/
+			}
+		}
+		break;
+
 		case IDM_LOAD_MOV:
+		{
+
+			if (fd->OpenFile())
 			{
-			 
-			 if(fd->OpenFile())
-			 {
-			    movie_full_path = fd->Get_Name();
-			 }
-			
-			 // sets pointer to selected video file
-			 vio->Get_Video_from_File(movie_full_path);
-			 // fills textfield with pathinfo of loaded movie
-			 Set_Text(pathinfo_handle,movie_full_path);
-			 // fills textfield (labeled 'TO') with a loaded video's number of total frames
-			 Transfer_Num_as_Text(to_handle,vio->Get_Total_Frames());
-			 Set_Text(button_handle,"GO");
-			 
-			
+				movie_full_path = fd->Get_Name();
 			}
-			break;
-			
-		
+
+			// sets pointer to selected video file
+			vio->Get_Video_from_File(movie_full_path);
+			// fills textfield with pathinfo of loaded movie
+			Set_Text(video_pathinfo_handle, movie_full_path);
+			// fills textfield (labeled 'TO') with a loaded video's number of total frames
+			Transfer_Num_as_Text(to_handle, vio->Get_Total_Frames());
+			Set_Text(button_handle, "GO");
+		}
+		break;
+
+
 		case IDM_STOP_MOVIE:
-			{
-				
-				vio->Stop_Video();
-				Set_Text(button_handle,"ABORTED");
-			}
-			break;
+		{
+
+			vio->Stop_Video();
+			Set_Text(button_handle, "ABORTED");
+		}
+		break;
 		case IDM_PLAY_MOV:
-			{
-			   // switches between menu checked and menu unchecked state
-               CheckMenuItem(menu_handle,IDM_PLAY_MOV,MF_CHECKED);
-			   CheckMenuItem(menu_handle,IDM_WRITE_MOV,MF_UNCHECKED); 
-			}
+		{
+			// switches between menu checked and menu unchecked state
+			CheckMenuItem(menu_handle, IDM_PLAY_MOV, MF_CHECKED);
+			CheckMenuItem(menu_handle, IDM_WRITE_MOV, MF_UNCHECKED);
+		}
 
-			break;   
+		break;
 		case IDM_WRITE_MOV:
-			{
-			   // switches between menu checked and menu unchecked state
-				CheckMenuItem(menu_handle,IDM_WRITE_MOV,MF_CHECKED);
-				CheckMenuItem(menu_handle,IDM_PLAY_MOV,MF_UNCHECKED); 
-			}
-			break;
+		{
+			// switches between menu checked and menu unchecked state
+			CheckMenuItem(menu_handle, IDM_WRITE_MOV, MF_CHECKED);
+			CheckMenuItem(menu_handle, IDM_PLAY_MOV, MF_UNCHECKED);
+		}
+		break;
 		case IDM_SHOW_FILES:
-			{
-			  ShowWindow(dialog_handle,SW_SHOW);
-			}
-		    break;
+		{
+			ShowWindow(dialog_handle, SW_SHOW);
+		}
+		break;
 		// NOT visible in compiled program
-        case IDM_GRAB_PICS:
+		case IDM_GRAB_PICS:
+		{
+
+			if (fd->OpenFileEx())
 			{
-			
-			 if(fd->OpenFileEx())
-			 {
-			 // gets file_name with path
-			  movie_full_path = fd->Get_Name();
-			  // gets file_name only
-			  movie_file_name = fd->Get_FilenameEx();
-			  // stores files of a selected folder in dictionary (Standard template library std::map; see File_Dialog class)
-			  // filenames should have the following appearance: Name_## (e.g. Karl_5)
-			  fd->Store_Folders_FilesEx();
-			 }
-			 
-			 // resets content of list box in modeless dialog // not visible in compiled program (see [REF])
-			 LRESULT lResult = SendDlgItemMessage(dialog_handle,ID_LST_LOADED_FILES,
-									 LB_RESETCONTENT, 0,0);
+				// gets file_name with path
+				movie_full_path = fd->Get_Name();
+				// gets file_name only
+				movie_file_name = fd->Get_FilenameEx();
+				// stores files of a selected folder in dictionary (Standard template library std::map; see File_Dialog class)
+				// filenames should have the following appearance: Name_## (e.g. Karl_5)
+				fd->Store_Folders_FilesEx();
+			}
 
-			 // creates array with length of std::map
-			 string* file_arr = new string[fd->Get_Map_Size()];
-			 int count_it =0;
-			 string path_str;
-			 string help_str;
+			// resets content of list box in modeless dialog // not visible in compiled program (see [REF])
+			LRESULT lResult = SendDlgItemMessage(dialog_handle, ID_LST_LOADED_FILES,
+				LB_RESETCONTENT, 0, 0);
 
-			 // transfers file_names of map to array
-			 while (true)
-			 {
+			// creates array with length of std::map
+			string* file_arr = new string[fd->Get_Map_Size()];
+			int count_it = 0;
+			string path_str;
+			string help_str;
+
+			// transfers file_names of map to array
+			while (true)
+			{
 				// concatenates path and filename string till end of std::map is reached (in FileDialog class)
 				path_str = fd->Get_PathNameEx();
-                help_str= fd->Get_Folder_FilenameEx();
+				help_str = fd->Get_Folder_FilenameEx();
 				path_str += help_str;
-			   if (help_str == "FIN") break;
-			   
-			   file_arr[count_it] = path_str;
-			   count_it++;
-			   // inserts file_names in list box of modeless dialog // see [REF]
-			    lResult = SendDlgItemMessage(dialog_handle,ID_LST_LOADED_FILES,
-		         LB_ADDSTRING,0,(LPARAM) help_str.c_str());
-				
-			 }
-			 // turns single files (=images) into movie
-			 vio->Turn_Pics_into_Video(file_arr,fd->Get_Map_Size(),10);
-			 delete []file_arr;
+				if (help_str == "FIN") break;
+
+				file_arr[count_it] = path_str;
+				count_it++;
+				// inserts file_names in list box of modeless dialog // see [REF]
+				lResult = SendDlgItemMessage(dialog_handle, ID_LST_LOADED_FILES,
+					LB_ADDSTRING, 0, (LPARAM)help_str.c_str());
+
 			}
-			break;
-       // NOT visible in compiled program
+			// turns single files (=images) into movie
+			vio->Turn_Pics_into_Video(file_arr, fd->Get_Map_Size(), 10);
+			delete[]file_arr;
+		}
+		break;
+		// NOT visible in compiled program
 		case IDM_MOVIE_TO_PICS:
+		{
+			// retrieves file and path of movie
+			if (fd->OpenFileEx())
 			{
-		     // retrieves file and path of movie
-			 if(fd->OpenFileEx())
-			 {
-				 movie_full_path = fd->Get_Name();
-			     movie_file_name = fd->Get_FilenameEx();
-			 }
-			  // dissects string into value and key for standard template library dictionary (=> std::map in File_Dialog class)
-			  string help_str = movie_full_path;
-			  int length = help_str.length();
-			  help_str.erase(length - 4, length); //removes fileending e.g. ".avi"
-			  // uses pathinfo and filename to create a folder, where the created file will be put in
-			  CreateDirectory(help_str.c_str(),NULL);  
-			  // sets pointer to selected video file => loads movie
-			  vio->Get_Video_from_File(movie_full_path);
-			  // fills textfield with pathinfo of loaded movie
-			  Set_Text(pathinfo_handle,movie_full_path);
-			  // fills textfield (labeled 'TO') with a loaded video's number of total frames
-			  Transfer_Num_as_Text(to_handle,vio->Get_Total_Frames());
-			  // writes movie frames as pics into directory
-			  vio->Turn_Video_into_Pics(help_str);
-			  
+				movie_full_path = fd->Get_Name();
+				movie_file_name = fd->Get_FilenameEx();
 			}
-			break;
+			// dissects string into value and key for standard template library dictionary (=> std::map in File_Dialog class)
+			string help_str = movie_full_path;
+			int length = help_str.length();
+			help_str.erase(length - 4, length); //removes fileending e.g. ".avi"
+			// uses pathinfo and filename to create a folder, where the created file will be put in
+			CreateDirectory(help_str.c_str(), NULL);
+			// sets pointer to selected video file => loads movie
+			vio->Get_Video_from_File(movie_full_path);
+			// fills textfield with pathinfo of loaded movie
+			Set_Text(video_pathinfo_handle, movie_full_path);
+			// fills textfield (labeled 'TO') with a loaded video's number of total frames
+			Transfer_Num_as_Text(to_handle, vio->Get_Total_Frames());
+			// writes movie frames as pics into directory
+			vio->Turn_Video_into_Pics(help_str);
+
+		}
+		break;
 		case IDM_EXIT:
 			vio->Stop_Video();
 			DestroyWindow(hWnd);
@@ -419,162 +461,218 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			return DefWindowProc(hWnd, message, wParam, lParam);
 		}
 		break;
-	
+
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
-		
+
 		EndPaint(hWnd, &ps);
 		break;
 
 	case WM_CREATE:
-		{
-		 fd = new FileDialog(hWnd);
-		 vio = new Video_OP();
+	{
+		fd = new FileDialog(hWnd);
+		vio = new Video_OP();
 
-		 
-		 //PATH FOR WRITING DATA FILES // not used here
-		     
-			 DWORD x = GetCurrentDirectory(250,lpBuffer);
-			 // not needed here 
-			 vio->Create_Dest_Folder(lpBuffer);
+
+		//PATH FOR WRITING DATA FILES // not used here
+
+		DWORD x = GetCurrentDirectory(250, lpBuffer);
+		// not needed here 
+		vio->Create_Dest_Folder(lpBuffer);
+
+		// Static control as caption for path info textfield
+		img_path_caption_handle = CreateWindowEx(WS_EX_TRANSPARENT, "STATIC", "ImageDir:", WS_CHILD | WS_VISIBLE,
+			10, 10, 70, 30, hWnd, (HMENU)IDC_STATIC_IMAGE_PATH, GetModuleHandle(NULL), NULL);
+		//SetBkColor(img_path_caption_handle, GetSysColor(COLOR_WINDOW));
+
+		// Textfield for image pathinfo
+		img_pathinfo_handle = CreateWindowEx(WS_EX_STATICEDGE, "STATIC", "", WS_CHILD | WS_VISIBLE,
+			85, 10, 440, 30, hWnd, (HMENU)IDC_EDIT_IMAGE_PATH, GetModuleHandle(NULL), NULL);
+
+		video_path_caption_handle = CreateWindowEx(WS_EX_TRANSPARENT, "STATIC", "VideoDir:", WS_CHILD | WS_VISIBLE,
+			10, 50, 70, 30, hWnd, (HMENU)IDC_STATIC_VIDEO_PATH, GetModuleHandle(NULL), NULL);
+		// Textfield for video pathinfo
+		video_pathinfo_handle = CreateWindowEx(WS_EX_STATICEDGE, "STATIC", "", WS_CHILD | WS_VISIBLE,
+			85, 50, 440, 30, hWnd, (HMENU)IDC_EDIT_VIDEO_PATH, GetModuleHandle(NULL), NULL);
+
+		//videoName
+		CreateWindowEx(WS_EX_TRANSPARENT, "STATIC", "CurVideo:", WS_CHILD | WS_VISIBLE,
+			10, 90, 70, 30, hWnd, (HMENU)IDC_STATIC_VIDENAME, GetModuleHandle(NULL), NULL);
+		videoName_handle = CreateWindowEx(WS_EX_STATICEDGE, "STATIC", "", WS_CHILD | WS_VISIBLE,
+			85, 90, 300, 30, hWnd, (HMENU)IDC_EDIT_VIDEONAME, GetModuleHandle(NULL), NULL);
+
+		//trackId
+		CreateWindowEx(WS_EX_TRANSPARENT, "STATIC", "CurTrack:", WS_CHILD | WS_VISIBLE,
+			400, 90, 70, 30, hWnd, (HMENU)IDC_STATIC_TRACK, GetModuleHandle(NULL), NULL);
+		trackId_handle = CreateWindowEx(WS_EX_STATICEDGE, "STATIC", "", WS_CHILD | WS_VISIBLE,
+			475, 90, 50, 30, hWnd, (HMENU)IDC_EDIT_TRACK, GetModuleHandle(NULL), NULL);
+
+		int horzSeparatorPos = 130;
+		CreateWindowEx(WS_EX_CLIENTEDGE, "Static", "", SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE, 5, horzSeparatorPos, 535, 10, hWnd, NULL, GetModuleHandle(NULL), NULL);
+
+		// Static control saying FROM
+		CreateWindowEx(WS_EX_TRANSPARENT, "STATIC", "Video Info Section", WS_CHILD | WS_VISIBLE,
+			10, horzSeparatorPos + 10, 145, 30, hWnd, NULL, GetModuleHandle(NULL), NULL);
+
+		from_caption_handle = CreateWindowEx(WS_EX_TRANSPARENT, "STATIC", "Frame start:", WS_CHILD | WS_VISIBLE,
+			10, horzSeparatorPos+50, 90, 30, hWnd, (HMENU)IDC_STATIC_START, GetModuleHandle(NULL), NULL);
+		// Textfield to fill in frame where video shall start from
+		from_handle = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE,
+			105, horzSeparatorPos + 50, 50, 30, hWnd, (HMENU)IDC_EDIT_START, GetModuleHandle(NULL), NULL);
+
+		// Static control saying TO
+		to_caption_handle = CreateWindowEx(WS_EX_TRANSPARENT, "STATIC", "Frame end:", WS_CHILD | WS_VISIBLE,
+			10, horzSeparatorPos + 90, 90, 30, hWnd, (HMENU)IDC_STATIC_STOP, GetModuleHandle(NULL), NULL);
+		// Textfield for telling program where to stop 
+		to_handle = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE,
+			105, horzSeparatorPos + 90, 50, 30, hWnd, (HMENU)IDC_EDIT_STOP, GetModuleHandle(NULL), NULL);
+
+		// Button to start processes which were selected in the menu
+		button_handle = CreateWindowEx(WS_EX_CLIENTEDGE, "BUTTON", "PLAY", WS_CHILD | WS_VISIBLE,
+			40, horzSeparatorPos + 130, 80, 40, hWnd, (HMENU)IDC_BUTTON_DO_IT, GetModuleHandle(NULL), NULL);
+
+		int vertSeparatorPos = 170;
+		CreateWindowEx(WS_EX_CLIENTEDGE, "Static", "", SS_ETCHEDVERT | WS_CHILD | WS_VISIBLE, vertSeparatorPos, horzSeparatorPos+1, 100, 300, hWnd, NULL, GetModuleHandle(NULL), NULL);
+
+		// commoncontrol DLL needs to be loaded (needed for trackbar) 
+		//Attention: also requires <commctrl.h> and comctl32.lib
+		INITCOMMONCONTROLSEX icc;
+		icc.dwICC = ICC_BAR_CLASSES;
+		icc.dwSize = sizeof(icc);
+		bool z = InitCommonControlsEx(&icc);
+
+		//frame diff and distance filters
+		framediff_caption_handle = CreateWindowEx(WS_EX_TRANSPARENT, "STATIC", "Framediff Thres:", WS_CHILD | WS_VISIBLE,
+			vertSeparatorPos + 10, horzSeparatorPos+10, 110, 30, hWnd, (HMENU)IDC_STATIC_FRAME_DIFF, GetModuleHandle(NULL), NULL);
+		framediff_handle = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE,
+			vertSeparatorPos + 125, horzSeparatorPos + 10, 50, 30, hWnd, (HMENU)IDC_EDIT_FRAME_DIFF, GetModuleHandle(NULL), NULL);
+
+		int thirdcolPos = vertSeparatorPos + 180;
+
+		distance_caption_handle = CreateWindowEx(WS_EX_TRANSPARENT, "STATIC", "Distance Thres:", WS_CHILD | WS_VISIBLE,
+			thirdcolPos + 10, horzSeparatorPos + 10, 110, 30, hWnd, (HMENU)IDC_STATIC_DISTANCE_THRES, GetModuleHandle(NULL), NULL);
+		distance_handle = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE,
+			thirdcolPos + 125, horzSeparatorPos + 10, 50, 30, hWnd, (HMENU)IDC_EDIT_DISTANCE_THRES, GetModuleHandle(NULL), NULL);
+
+		//base/match image selector
+		check_box_handles[0] = CreateWindowEx(WS_EX_STATICEDGE, "BUTTON", "Base Image", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON,
+			vertSeparatorPos + 10, horzSeparatorPos + 50, 165, 30, hWnd, (HMENU)IDC_CHECK_BOX_BASE, GetModuleHandle(NULL), NULL);
+		check_box_handles[1] = CreateWindowEx(WS_EX_STATICEDGE, "BUTTON", "Match Image", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON,
+			vertSeparatorPos + 10, horzSeparatorPos + 90, 165, 30, hWnd, (HMENU)IDC_CHECK_BOX_MATCH, GetModuleHandle(NULL), NULL);
 		
-		  // Static control as caption for path info textfield
-		     path_caption_handle = CreateWindowEx(WS_EX_CLIENTEDGE,"STATIC","PATHINFO",WS_CHILD | WS_VISIBLE,
-		       12,10,100,30,hWnd,(HMENU) IDC_STATIC_PATH,GetModuleHandle(NULL),NULL);
+		//merge checkbox
+		merge_checkbox_handle = CreateWindowEx(WS_EX_STATICEDGE, "BUTTON", "Merge Match to Base", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+			thirdcolPos + 10, horzSeparatorPos + 50, 165, 30, hWnd, (HMENU)IDC_CHECK_BOX_MERGE, GetModuleHandle(NULL), NULL);
 
-		   // Textfield (Edit control) for pathinfo
-		     pathinfo_handle = CreateWindowEx(WS_EX_CLIENTEDGE,"EDIT","",WS_CHILD | WS_VISIBLE,
-		       12,50,500,30,hWnd,(HMENU) IDC_EDIT_PATH,GetModuleHandle(NULL),NULL);
-
-		   // Static control saying FROM
-		     from_caption_handle = CreateWindowEx(WS_EX_CLIENTEDGE,"STATIC","FROM",WS_CHILD | WS_VISIBLE,
-		       12,90,50,30,hWnd,(HMENU) IDC_STATIC_START,GetModuleHandle(NULL),NULL);
-
-		   // Static control saying TO
-		      to_caption_handle = CreateWindowEx(WS_EX_CLIENTEDGE,"STATIC","TO",WS_CHILD | WS_VISIBLE,
-		       12,130,50,30,hWnd,(HMENU) IDC_STATIC_STOP,GetModuleHandle(NULL),NULL);
-		 
-		   // Textfield to fill in frame where video shall start from
-		      from_handle = CreateWindowEx(WS_EX_CLIENTEDGE,"EDIT","",WS_CHILD | WS_VISIBLE,
-		       72,90,50,30,hWnd,(HMENU) IDC_EDIT_START,GetModuleHandle(NULL),NULL);
-
-		   // Textfield for telling program where to stop 
-		      to_handle = CreateWindowEx(WS_EX_CLIENTEDGE,"EDIT","",WS_CHILD | WS_VISIBLE,
-		       72,130,50,30,hWnd,(HMENU) IDC_EDIT_STOP,GetModuleHandle(NULL),NULL);
-
-		   // Button to start processes which were selected in the menu
-		       button_handle = CreateWindowEx(WS_EX_CLIENTEDGE,"BUTTON","GO",WS_CHILD | WS_VISIBLE,
-		       22,180,80,40,hWnd,(HMENU) IDC_BUTTON_DO_IT,GetModuleHandle(NULL),NULL);
-
-          
-
-			   // commoncontrol DLL needs to be loaded (needed for trackbar) 
-			   //Attention: also requires <commctrl.h> and comctl32.lib
-			   INITCOMMONCONTROLSEX icc;
-			   icc.dwICC = ICC_BAR_CLASSES;
-			   icc.dwSize = sizeof(icc);
-		        bool z = InitCommonControlsEx(&icc);
-
-           // Creates a trackbar 
-		     track_bar_handle = CreateWindowEx(WS_EX_CLIENTEDGE,TRACKBAR_CLASS,"Trackbar",WS_CHILD | WS_VISIBLE | TBS_AUTOTICKS | TBS_ENABLESELRANGE,
-		       152,90,180,40,hWnd,(HMENU) IDC_TRACKBAR,GetModuleHandle(NULL),NULL);
-          // Sets Range for Trackbar
-			 SendMessage(track_bar_handle,TBM_SETRANGEMAX,0,25);
-
-	
-
+		//change spot
+		CreateWindowEx(WS_EX_TRANSPARENT, "Static", "New Spot:", WS_CHILD | WS_VISIBLE,
+			thirdcolPos + 10, horzSeparatorPos + 90, 110, 30, hWnd, (HMENU)IDC_STATIC_SPOT, GetModuleHandle(NULL), NULL);
+		spot_handle = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE,
+			thirdcolPos + 125, horzSeparatorPos + 90, 50, 30, hWnd, (HMENU)IDC_EDIT_SPOT, GetModuleHandle(NULL), NULL);
 		
-			 check_box_handles[0] = CreateWindowEx(WS_EX_CLIENTEDGE,"BUTTON","Blur",WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 152, 150,
-				    150,16,hWnd,(HMENU) IDC_CKECK_BOX_BLUR, GetModuleHandle(NULL),NULL);
+		//navigator
+		leftnavi_button_handle = CreateWindowEx(WS_EX_CLIENTEDGE, "BUTTON", "<---", WS_CHILD | WS_VISIBLE,
+			vertSeparatorPos + 100 - 80, horzSeparatorPos + 130, 80, 40, hWnd, (HMENU)IDC_BUTTON_LEFT, GetModuleHandle(NULL), NULL);
+		rightnavi_button_handle = CreateWindowEx(WS_EX_CLIENTEDGE, "BUTTON", "--->", WS_CHILD | WS_VISIBLE,
+			vertSeparatorPos + 185 - 80, horzSeparatorPos + 130, 80, 40, hWnd, (HMENU)IDC_BUTTON_RIGHT, GetModuleHandle(NULL), NULL);
+		//save review result
+		save_button_handle = CreateWindowEx(WS_EX_CLIENTEDGE, "BUTTON", "SAVE", WS_CHILD | WS_VISIBLE,
+			vertSeparatorPos + 275, horzSeparatorPos + 130, 80, 40, hWnd, (HMENU)IDC_BUTTON_SAVE, GetModuleHandle(NULL), NULL);
 
-			 check_box_handles[1] = CreateWindowEx(WS_EX_CLIENTEDGE,"BUTTON","Erode",WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 152, 170,
-				    150,16,hWnd,(HMENU) IDC_CKECK_BOX_ERODE, GetModuleHandle(NULL),NULL);
+		/*// Creates a trackbar 
+		track_bar_handle = CreateWindowEx(WS_EX_CLIENTEDGE, TRACKBAR_CLASS, "Trackbar", WS_CHILD | WS_VISIBLE | TBS_AUTOTICKS | TBS_ENABLESELRANGE,
+			150, 90, 180, 40, hWnd, (HMENU)IDC_TRACKBAR, GetModuleHandle(NULL), NULL);
+		// Sets Range for Trackbar
+		SendMessage(track_bar_handle, TBM_SETRANGEMAX, 0, 25);
 
-			 check_box_handles[2] = CreateWindowEx(WS_EX_CLIENTEDGE,"BUTTON","Dilate",WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 152, 190,
-				    150,16,hWnd,(HMENU) IDC_CKECK_BOX_DILATE, GetModuleHandle(NULL),NULL);
+		check_box_handles[0] = CreateWindowEx(WS_EX_CLIENTEDGE, "BUTTON", "Blur", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 152, 150,
+			150, 16, hWnd, (HMENU)IDC_CKECK_BOX_BLUR, GetModuleHandle(NULL), NULL);
 
-			 check_box_handles[3] = CreateWindowEx(WS_EX_CLIENTEDGE,"BUTTON","Contour Threshold",WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 152, 210,
-				    150,16,hWnd,(HMENU) IDC_CKECK_BOX_CONT_THRESH, GetModuleHandle(NULL),NULL);
+		check_box_handles[1] = CreateWindowEx(WS_EX_CLIENTEDGE, "BUTTON", "Erode", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 152, 170,
+			150, 16, hWnd, (HMENU)IDC_CKECK_BOX_ERODE, GetModuleHandle(NULL), NULL);
 
+		check_box_handles[2] = CreateWindowEx(WS_EX_CLIENTEDGE, "BUTTON", "Dilate", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 152, 190,
+			150, 16, hWnd, (HMENU)IDC_CKECK_BOX_DILATE, GetModuleHandle(NULL), NULL);
 
-			 // Textfield (Edit control) for trackbar position
-		     trackbar_info_handle = CreateWindowEx(WS_EX_CLIENTEDGE,"EDIT","",WS_CHILD | WS_VISIBLE,
-		       350,90,50,40,hWnd,(HMENU) IDC_EDIT_TRACKBAR_INFO,GetModuleHandle(NULL),NULL);
+		check_box_handles[3] = CreateWindowEx(WS_EX_CLIENTEDGE, "BUTTON", "Contour Threshold", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 152, 210,
+			150, 16, hWnd, (HMENU)IDC_CKECK_BOX_CONT_THRESH, GetModuleHandle(NULL), NULL);
 
-           // Gets Menu Handle
-		    menu_handle = GetMenu(hWnd);
+		// Textfield (Edit control) for trackbar position
+		trackbar_info_handle = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE,
+			350, 90, 50, 40, hWnd, (HMENU)IDC_EDIT_TRACKBAR_INFO, GetModuleHandle(NULL), NULL);*/
 
-			CheckMenuItem(menu_handle,IDM_PLAY_MOV,MF_CHECKED);
-	
-	        Set_Text(button_handle,"NO MOV");
+		// Gets Menu Handle
+		menu_handle = GetMenu(hWnd);
 
-		   // sets up a messages handler for modeless dialog (see [REF])
-		  // dialog_handle = CreateDialog(GetModuleHandle(NULL),
-			// MAKEINTRESOURCE(ID_DIA_LOADED_FILES),hWnd,Loaded_Files_Proc);
-		 
+		CheckMenuItem(menu_handle, IDM_PLAY_MOV, MF_CHECKED);
 
-		   
-		}
-		break;
-    // Messages coming from the slider/scrollbar/trackbar (whatever it is called)
-    case WM_HSCROLL:
-		{
-		LRESULT res = SendMessage(track_bar_handle,TBM_GETPOS,0,0);
+		//Set_Text(button_handle, "NO MOV");
+
+		// sets up a messages handler for modeless dialog (see [REF])
+		// dialog_handle = CreateDialog(GetModuleHandle(NULL),
+		// MAKEINTRESOURCE(ID_DIA_LOADED_FILES),hWnd,Loaded_Files_Proc);
+
+	}
+	break;
+	// Messages coming from the slider/scrollbar/trackbar (whatever it is called)
+	case WM_HSCROLL:
+	{
+		LRESULT res = SendMessage(track_bar_handle, TBM_GETPOS, 0, 0);
 
 		// check radiobutton (option button)
 
-		if (BST_CHECKED == SendMessage(check_box_handles[0],BM_GETCHECK,0,0))
-		    {
-		      vio->Blur(int(res));
-		    }
-		else if (BST_CHECKED == SendMessage(check_box_handles[1],BM_GETCHECK,0,0))
-		    {
-     		  vio->Erode((int)res);
-		    }
-		else if (BST_CHECKED == SendMessage(check_box_handles[2],BM_GETCHECK,0,0))
-		    {
-		      vio->Dilate((int)res);
-		    }
-		else if (BST_CHECKED == SendMessage(check_box_handles[3],BM_GETCHECK,0,0))
-		    {
-              vio->Draw_Contours((int)res);
-		    }
-		
-		  // fills textfield (labeled 'TO') with a loaded video's number of total frames
-		   Transfer_Num_as_Text(trackbar_info_handle,(int)res);
-		}
-		break;
-    // press left mouse button somewhere in the main window to uncheck all radiobuttons (optionbuttons)
-	case WM_LBUTTONDOWN:
-		{  
-
-			vio->Reset_Manipulators();
-			for (int i= 0; i < 5; i++)
-			{
-			   SendMessage(check_box_handles[i],BM_SETCHECK,BST_UNCHECKED,0);
-			}
-
-		}
-		break;
-/* // not needed
-    case WM_KEYDOWN:
+		if (BST_CHECKED == SendMessage(check_box_handles[0], BM_GETCHECK, 0, 0))
 		{
-		  	int x =0;
-		  switch(wParam)
-		  {
-		  case VK_LEFT:
-               x =Beep(100,200);
-			  break;
-		  case VK_RIGHT:
-			  x = Beep(300,200);
-			  break;
-		  }
+			vio->Blur(int(res));
+		}
+		else if (BST_CHECKED == SendMessage(check_box_handles[1], BM_GETCHECK, 0, 0))
+		{
+			vio->Erode((int)res);
+		}
+		else if (BST_CHECKED == SendMessage(check_box_handles[2], BM_GETCHECK, 0, 0))
+		{
+			vio->Dilate((int)res);
+		}
+		else if (BST_CHECKED == SendMessage(check_box_handles[3], BM_GETCHECK, 0, 0))
+		{
+			vio->Draw_Contours((int)res);
+		}
+
+		// fills textfield (labeled 'TO') with a loaded video's number of total frames
+		Transfer_Num_as_Text(trackbar_info_handle, (int)res);
+	}
+	break;
+	// press left mouse button somewhere in the main window to uncheck all radiobuttons (optionbuttons)
+	case WM_LBUTTONDOWN:
+	{
+
+		vio->Reset_Manipulators();
+		for (int i = 0; i < 5; i++)
+		{
+			SendMessage(check_box_handles[i], BM_SETCHECK, BST_UNCHECKED, 0);
+		}
+
+	}
+	break;
+	/* // not needed
+		case WM_KEYDOWN:
+		{
+		int x =0;
+		switch(wParam)
+		{
+		case VK_LEFT:
+		x =Beep(100,200);
+		break;
+		case VK_RIGHT:
+		x = Beep(300,200);
+		break;
+		}
 		}
 		break;
-*/
+		*/
 	case WM_DESTROY:
 		vio->Stop_Video();
-      
+
 		PostQuitMessage(0);
 		break;
 	default:
@@ -594,7 +692,7 @@ LRESULT CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		return TRUE;
 
 	case WM_COMMAND:
-		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL) 
+		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
 		{
 			EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
@@ -628,42 +726,37 @@ BOOL CALLBACK Loaded_Files_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 //ADDITIONAL GLOBAL FUNCTIONS
 
 // displays char String in Window of selected handle
-void Display_String(HWND handle,int where_x, int where_y, char* str)
+void Display_String(HWND handle, int where_x, int where_y, char* str)
 {
-	
-  HDC hDC = GetDC(handle);
-  TextOut(hDC,where_x,where_y,str,strlen(str));
-  ReleaseDC(handle,hDC);
+	HDC hDC = GetDC(handle);
+	TextOut(hDC, where_x, where_y, str, strlen(str));
+	ReleaseDC(handle, hDC);
 }
 
 
 // returns number contained in a static or edit control
-int Get_Number(HWND handle) 
- {
-	 char buf[30];
-	 int x = GetWindowText(handle,buf,strlen(buf));
-	   if(strlen > 0)
-       {
-         return atoi(buf);
-	   }
-	   
-        return 0;
- }
+int Get_Number(HWND handle){
+	char buf[30];
+	int x = GetWindowText(handle, buf, strlen(buf));
+	if (strlen > 0)
+	{
+		return atoi(buf);
+	}
+
+	return 0;
+}
 // transfer Integer to a static or edit control
- void Transfer_Num_as_Text(HWND handle, int number)
- {
-	 
-   char buf[30];
-   sprintf_s(buf,"%d",(int)number);
-   SendMessage((HWND)handle,(UINT) WM_SETTEXT,NULL,(LPARAM) buf);
- }
+void Transfer_Num_as_Text(HWND handle, int number)
+{
+	char buf[30];
+	sprintf_s(buf, "%d", (int)number);
+	SendMessage((HWND)handle, (UINT)WM_SETTEXT, NULL, (LPARAM)buf);
+}
 
 // transfers Text (i.e. char) to control 
- void Set_Text(HWND handle, char* str)
- {
-   
-   SendMessage((HWND)handle,(UINT) WM_SETTEXT,NULL,(LPARAM) str);
- 
- }
+void Set_Text(HWND handle, char* str)
+{
+	SendMessage((HWND)handle, (UINT)WM_SETTEXT, NULL, (LPARAM)str);
+}
 
  

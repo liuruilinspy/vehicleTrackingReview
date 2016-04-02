@@ -8,14 +8,22 @@ public:
 	FileDialog(HWND parent_handle);
 	~FileDialog(){}
 //Methods
+	//
+   bool OpenDirectory();
    //Shows Open File Dialog
-	bool OpenFile();
+   bool OpenFile();
    //Shows Save File Dialog
    bool SaveFile();
    //Opens Folder Only
    bool OpenFileEx();
    //returns Char Array of selected path
    char* Get_Name();
+
+   //returns Char Array of selected image folder
+   char *Get_ImgFolder_Name();
+
+   //return all file names except folders into out vector
+   void GetFilesInDirectory(std::vector<string> &out, const string &directory, const string extension);
 
    //EXTRA: methods for loading and accessing files in a folder
 
@@ -41,10 +49,14 @@ private:
 	HANDLE h_Find ;
 	HWND my_hwnd;
 	
-
+	//variables for video file
 	char szFileName[260];
 	char Path_only[260];
 	char *p_szFileName;
+
+	//variables for image folder
+	char szImgFolderName[MAX_PATH];
+	char *p_szImgFolderName;
 
 	//EXTRA: variables for laoding folder methods
 	map<int,string> file_map;
