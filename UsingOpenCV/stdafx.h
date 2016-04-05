@@ -10,6 +10,7 @@
 #define WIN32_LEAN_AND_MEAN		// Selten verwendete Teile der Windows-Header nicht einbinden
 // Windows-Headerdateien:
 #include <windows.h>
+#include <windowsx.h>
 // C RunTime-Headerdateien
 #include <stdlib.h>
 #include <malloc.h>
@@ -37,6 +38,7 @@ using namespace std;
 #include "File_Dialog_DEF.h"
 #include "File_String_OP_DEF.h"
 #include "OpenCv_Video_DEF.h"
+#include "ImageInfo.h"
 
 
 

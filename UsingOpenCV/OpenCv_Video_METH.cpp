@@ -8,10 +8,16 @@ void Image_OP::Set_Mouse_Callback_for_Image(IplImage *image_with_callback)
 	cvSetMouseCallback( "choose area", my_Mouse_Handler, (void*)image_with_callback );
 }
 
-void Image_OP::Load_Image(char* file_name){
-  this->my_loaded_image = cvLoadImage(file_name);
-  cvNamedWindow("choose area", CV_WINDOW_AUTOSIZE);
-  cvShowImage("choose area",my_loaded_image);
+void Image_OP::Load_Image(const char* caption, const char* file_name, int x, int y, int width, int height){
+	this->my_loaded_image = cvLoadImage(file_name);
+	cvNamedWindow(caption, CV_WINDOW_NORMAL);
+	cv::resizeWindow(caption, width, height);
+	cv::moveWindow(caption, x, y);
+	cvShowImage(caption, my_loaded_image);
+}
+
+void Image_OP::Destroy_Image(const char* caption){
+	cvDestroyWindow(caption);
 }
 
 void Image_OP::Save_Image(IplImage *img, string file_path){
@@ -405,21 +411,19 @@ bool Video_OP::Get_Video_from_File(char* file_name)
 	my_ROI.height = captured_size.height;
 
 	// creates window to display first frame
-	cvNamedWindow("choose area", CV_WINDOW_AUTOSIZE);
+	//cvNamedWindow("choose area", CV_WINDOW_AUTOSIZE);
 
 
 	// displays first frame in window
-	cvShowImage("choose area", my_grabbed_frame);
+	//cvShowImage("choose area", my_grabbed_frame);
 
 	// gets video's number of frames 
 	my_total_frame = (int)cvGetCaptureProperty(my_p_capture, CV_CAP_PROP_FRAME_COUNT);
 
 	// set Mouse callback for first grabbed frame
-	this->Set_Mouse_Callback_for_Image(this->my_grabbed_frame);
+	//this->Set_Mouse_Callback_for_Image(this->my_grabbed_frame);
 
-	this->my_loaded_image = my_grabbed_frame;
-
-
+	//this->my_loaded_image = my_grabbed_frame;
 
 	return true;
 }
@@ -526,7 +530,7 @@ void Video_OP::Play_Video(int from, int to, CvRect area)
 
 	// creates window, in which movie is displayed //see below (A)
 	cvNamedWindow("video", CV_WINDOW_AUTOSIZE);
-	cvNamedWindow("video area", CV_WINDOW_AUTOSIZE);
+	//cvNamedWindow("video area", CV_WINDOW_AUTOSIZE);
 
 	// sets pointer to frame where the video should start from 
 	this->Go_to_Frame(from); //or alternative see below
@@ -560,7 +564,7 @@ void Video_OP::Play_Video(int from, int to, CvRect area)
 		cvResetImageROI(my_grabbed_frame);
 
 		// displays Region of Interest and grabbed frame (=original)
-		cvShowImage("video area", area_frame);//area_frame );
+		//cvShowImage("video area", area_frame);//area_frame );
 		cvShowImage("video", my_grabbed_frame);
 
 		frame_counter++;
@@ -581,8 +585,8 @@ void Video_OP::Play_Video(int from, int to, CvRect area)
 	cvReleaseImage(&after_manipulation_img);
 	// closes windows, in which images are depicted 
 	cvDestroyWindow("video");
-	cvDestroyWindow("video area");
-	cvDestroyWindow("choose area");
+	//cvDestroyWindow("video area");
+	//cvDestroyWindow("choose area");
 
 }
 

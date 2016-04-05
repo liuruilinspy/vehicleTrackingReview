@@ -26,6 +26,8 @@
 #define IDM_SHOW_FILES                  370
 #define IDM_IMAGEOP_LOADIMAGEFOLDER     380
 #define IDM_IMAGEOP_SELECTVIDEOFOLDER   390
+#define IDM_IMAGEOP_SELECTOUTPUTFILE    400
+
 #define IDC_BUTTON_DO_IT                500
 #define IDC_EDIT_START                  510
 #define IDC_STATIC_START                520
@@ -59,7 +61,11 @@
 #define IDC_EDIT_VIDEONAME              830
 #define IDC_STATIC_TRACK                840
 #define IDC_EDIT_TRACK                  850
+#define IDC_CHECK_BOX_LEAVE             900
+#define IDC_CHECK_BOX_PARK              910
+#define IDC_EDIT_RESULT					920
 
+   
 
 // Next default values for new objects
 // 
@@ -67,7 +73,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        129
-#define _APS_NEXT_COMMAND_VALUE         32778
+#define _APS_NEXT_COMMAND_VALUE         32779
 #define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           110
 #endif

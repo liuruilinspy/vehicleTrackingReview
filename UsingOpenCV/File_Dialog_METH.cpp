@@ -29,22 +29,44 @@ FileDialog::FileDialog(HWND parent_handle)
 	dummy_str ="";
 }
 
+static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
+{
+	// If the BFFM_INITIALIZED message is received
+	// set the path to the start path.
+	switch (uMsg)
+	{
+	case BFFM_INITIALIZED:
+	{
+		if (NULL != lpData)
+		{
+			SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lpData);
+		}
+	}
+	}
+
+	return 0; // The function should always return 0.
+}
+
 bool FileDialog::OpenDirectory(){
 	BROWSEINFO   bi;
 	ZeroMemory(&bi, sizeof(bi));
 	char   szDisplayName[MAX_PATH];
 	strcpy_s(szDisplayName, "");
 
-	bi.hwndOwner = NULL;
+	char lpBuffer[250];
+	DWORD x = GetCurrentDirectory(250, lpBuffer);
+
+	bi.hwndOwner = my_hwnd;
 	bi.pidlRoot = NULL;
 	bi.pszDisplayName = szDisplayName;
 	bi.lpszTitle = _T("Please select the folder storing the result images :");
 	bi.ulFlags = BIF_RETURNONLYFSDIRS;
-	bi.lParam = NULL;
+	bi.lpfn = BrowseCallbackProc;
+	bi.lParam = (LPARAM)lpBuffer;
 	bi.iImage = 0;
 
 	strcpy_s(szImgFolderName, "");
-	LPITEMIDLIST   pidl = SHBrowseForFolder(&bi);
+	LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
 	if (NULL != pidl)
 	{
 		BOOL bRet = SHGetPathFromIDList(pidl, szImgFolderName);
@@ -52,15 +74,6 @@ bool FileDialog::OpenDirectory(){
 			MessageBox(my_hwnd, "Didn't work out right", "SORRY", MB_OK);
 			return false;
 		}
-		/*else{
-			std::vector<string> allfiles;
-			GetFilesInDirectory(allfiles, szImgFolderName);
-			string allfileNames = "";
-			for (string fileName : allfiles){
-				allfileNames += fileName + ",";
-			}
-			MessageBox(my_hwnd, allfileNames.c_str(), "Good", MB_OK);
-		*/
 	}
 
 	return true;
@@ -77,6 +90,7 @@ bool FileDialog::OpenFile()
 	}
 	return true;
 }
+
 bool FileDialog::SaveFile()
 {
   my_ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
@@ -161,14 +175,11 @@ void FileDialog::PrintPathName(int posX, int posY)
 	UpdateWindow(my_hwnd);
 }
 
-
-
 void FileDialog::Store_Folders_FilesEx()
 {
  
    // finds first file of folder
    h_Find = FindFirstFile(this->Path_only, &ffd);
-   int where_; //to store position of underscore ("_") ins string
    string cut_off; //to store string after underscore position
    int counter = 0; // if string has not the form (string_number e.g. Joseph_2)
 

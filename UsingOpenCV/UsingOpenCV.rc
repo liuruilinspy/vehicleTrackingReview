@@ -38,25 +38,21 @@ IDI_SMALL               ICON                    "small.ico"
 
 IDC_USINGOPENCV MENU
 BEGIN
+    POPUP "ImageOp"
+    BEGIN
+        MENUITEM "Select Image Folder",         IDM_IMAGEOP_LOADIMAGEFOLDER
+        MENUITEM "Select Video Folder",         IDM_IMAGEOP_SELECTVIDEOFOLDER
+        MENUITEM "Select Output File",          IDM_IMAGEOP_SELECTOUTPUTFILE
+    END
     POPUP "&File"
     BEGIN
         MENUITEM "Load Movie",                  IDM_LOAD_MOV
         MENUITEM "Stop Movie",                  IDM_STOP_MOVIE
         MENUITEM "Close Program",               IDM_EXIT
     END
-    POPUP "&Select Command"
-    BEGIN
-        MENUITEM "Play Movie",                  IDM_PLAY_MOV
-        MENUITEM "Save Movie",                  IDM_WRITE_MOV
-    END
     POPUP "&Author"
     BEGIN
         MENUITEM "&Info",                       IDM_ABOUT
-    END
-    POPUP "ImageOp"
-    BEGIN
-        MENUITEM "Select Image Folder",         IDM_IMAGEOP_LOADIMAGEFOLDER
-        MENUITEM "Select Video Folder",         IDM_IMAGEOP_SELECTVIDEOFOLDER
     END
 END
 

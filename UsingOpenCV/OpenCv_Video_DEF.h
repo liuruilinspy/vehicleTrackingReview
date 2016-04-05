@@ -1,3 +1,5 @@
+#define IMG_WIDTH 400
+#define IMG_HEIGHT 650
 
 // IMAGE_MANIPULATORS_CLASS (by MKopp)
 class Image_OP
@@ -9,7 +11,10 @@ public:
 
 	//methods
 	//  loads an image
-	void Load_Image(char* file_name);
+	void Load_Image(const char* caption, const char* file_name, int x, int y, int width = IMG_WIDTH, int height = IMG_HEIGHT);
+	// destroy the window for the given Image;
+	void Destroy_Image(const char* caption);
+
 	// saves an image
 	void Save_Image(IplImage *img, string file_path);
 	 // depicts contours of image

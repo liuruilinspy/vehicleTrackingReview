@@ -90,6 +90,7 @@
   <ItemGroup>
     <ClInclude Include="File_Dialog_DEF.h" />
     <ClInclude Include="File_String_OP_DEF.h" />
+    <ClInclude Include="ImageInfo.h" />
     <ClInclude Include="OpenCv_Video_DEF.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -99,6 +100,7 @@
   <ItemGroup>
     <ClCompile Include="File_Dialog_METH.cpp" />
     <ClCompile Include="File_String_OP_METH.cpp" />
+    <ClCompile Include="ImageInfo.cpp" />
     <ClCompile Include="OpenCv_Video_METH.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
