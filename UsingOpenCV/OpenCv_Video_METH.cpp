@@ -461,8 +461,22 @@ int Video_OP::Get_Width()
 // does not work without errors for every videoformat
 void Video_OP::Go_to_Frame(int frame)
 {
-   // OpenCV code that drives movie to a particular frame
-   int x = cvSetCaptureProperty( my_p_capture, CV_CAP_PROP_POS_FRAMES, (double) frame );
+	int position = frame;
+	int postiontest = frame;
+	int pos = -1;
+	cvSetCaptureProperty(my_p_capture, CV_CAP_PROP_POS_FRAMES, (double)position);
+	while (pos < position){
+		cvGrabFrame(my_p_capture);
+		pos = cvGetCaptureProperty(my_p_capture, CV_CAP_PROP_POS_FRAMES);
+
+		if (pos == position){
+			return;
+		}else if (pos > position){
+			postiontest--;
+			cvSetCaptureProperty(my_p_capture, CV_CAP_PROP_POS_FRAMES, (double)postiontest);
+			pos = -1;
+		}
+	}
 }
 
 void Video_OP::Grab_frame(int at_pos)
@@ -472,7 +486,7 @@ void Video_OP::Grab_frame(int at_pos)
    // so that a subsequent call returns the next frame
    this->Go_to_Frame(at_pos);
    cvNamedWindow( "grabbed frame", 0 );
-   my_grabbed_frame = cvQueryFrame( my_p_capture);
+   my_grabbed_frame = cvQueryFrame(my_p_capture);
    cvShowImage( "grabbed frame", my_grabbed_frame );
 }
 

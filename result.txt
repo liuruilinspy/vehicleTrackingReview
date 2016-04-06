@@ -14,3 +14,49 @@ OpenFile @ Tue Apr 05 17:35:06 2016
 
 LEAVE track=13 spot= 27
 MERGE fromTrack= 13 toTrack= 21
+OpenFile : C:\Users\Ruilin\Documents\GitHub\vehicleTrackingReview\result.txt @ Tue Apr 05 18:32:51 2016
+
+OpenFile : C:\Users\Ruilin\Documents\GitHub\vehicleTrackingReview\result.txt @ Tue Apr 05 18:37:12 2016
+
+PARK track=5 spot= 334
+OpenFile : C:\Users\Ruilin\Documents\GitHub\vehicleTrackingReview\result.txt @ Tue Apr 05 18:41:14 2016
+
+PARK track=5 spot= 12
+PARK track=5 spot= 12
+PARK track=5 spot= 12
+PARK track=5 spot= 12
+PARK track=5 spot= 12
+PARK track=5 spot= 12
+PARK track=5 spot= 12
+PARK track=5 spot= 12
+PARK track=5 spot= 12
+PARK track=5 spot= 12
+PARK track=5 spot= 12
+OpenFile : C:\Users\Ruilin\Documents\GitHub\vehicleTrackingReview\result.txt @ Tue Apr 05 18:50:39 2016
+
+LEAVE track=5 spot= 43
+LEAVE track=5 spot= 0
+LEAVE track=5 spot= 0
+LEAVE track=5 spot= 0
+LEAVE track=5 spot= 0
+LEAVE track=5 spot= 0
+LEAVE track=5 spot= 0
+OpenFile : C:\Users\Ruilin\Documents\GitHub\vehicleTrackingReview\result.txt @ Tue Apr 05 19:01:00 2016
+
+LEAVE track=13 spot= 27
+MERGE fromTrack= 13 toTrack= 21
+MERGE fromTrack= 13 toTrack= 21
+MERGE fromTrack= 13 toTrack= 21
+MERGE fromTrack= 13 toTrack= 21
+MERGE fromTrack= 13 toTrack= 21
+MERGE fromTrack= 13 toTrack= 21
+MERGE fromTrack= 13 toTrack= 21
+MERGE fromTrack= 13 toTrack= 21
+OpenFile : C:\Users\Ruilin\Documents\GitHub\vehicleTrackingReview\result.txt @ Tue Apr 05 20:03:19 2016
+
+OpenFile : C:\Users\Ruilin\Documents\GitHub\vehicleTrackingReview\result.txt @ Tue Apr 05 21:41:41 2016
+
+OpenFile : C:\Users\Ruilin\Documents\GitHub\vehicleTrackingReview\result.txt @ Tue Apr 05 21:55:59 2016
+
+OpenFile : C:\Users\Ruilin\Documents\GitHub\vehicleTrackingReview\result.txt @ Tue Apr 05 22:02:57 2016
+

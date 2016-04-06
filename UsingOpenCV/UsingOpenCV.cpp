@@ -62,9 +62,12 @@ Include opencv header files (here in stdafx.h file)
 #include "stdafx.h"
 #include "UsingOpenCV.h"
 #define MAX_LOADSTRING 100
+#define MAX_FRAME_SEQ 1296000 //15fps*3600 second *24 hour
 #define UNKNOW 0
 #define PARK 1
 #define LEAVE 2
+
+#define SHOW_LOG_SIZE 5
 
 // Global Variables:
 HINSTANCE hInst;								// current instance
@@ -79,7 +82,6 @@ LRESULT CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 
 // Implemented as modeless dialog; runs parallel to main application // see [REF]
 //BOOL CALLBACK   Loaded_Files_Proc(HWND, UINT, WPARAM, LPARAM);
-
 
 //GLOBAL USERDEFINED VARIABLES
 
@@ -114,6 +116,8 @@ LRESULT CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
  HWND save_button_handle;
  HWND merge_checkbox_handle;
  HWND spot_handle;
+
+ HWND result_handle;
 
 // for File Dialog Operations
 FileDialog * fd; //Pointer to FileDialog Class, will be intialized in WM_CREATE
@@ -257,7 +261,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	//hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
 	//  CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL); //OR
 	hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,
-		CW_USEDEFAULT, 0, 550, 380, NULL, NULL, hInstance, NULL);
+		CW_USEDEFAULT, 0, 550, 520, NULL, NULL, hInstance, NULL);
 
 
 	if (!hWnd)
@@ -348,12 +352,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					MessageBox(hWnd, "Either SpotNum or Park/Leave type is not set yet, please check and save again!", "WARNING", MB_OK);
 				}
 				else{
-					saveSpotConfig(type, trackID, spotNum);
+					if (saveSpotConfig(type, trackID, spotNum)){
+						Set_Text(spot_handle, "");
+						PostMessage(type == PARK ? check_box_handles[2] : check_box_handles[3], BM_SETCHECK, BST_UNCHECKED, 0);
+					}
 				}
 			}
 			else if (BST_CHECKED == SendMessage(check_box_handles[1], BM_GETCHECK, 0, 0)){
 				if (BST_CHECKED == SendMessage(merge_checkbox_handle, BM_GETCHECK, 0, 0)){
-					saveMerge(curBaseImageInfo->trackNum, curMatchImageInfo->trackNum);
+					if (saveMerge(curBaseImageInfo->trackNum, curMatchImageInfo->trackNum)){
+						PostMessage(merge_checkbox_handle, BM_SETCHECK, BST_UNCHECKED, 0);
+					}
 				}
 				else{
 					MessageBox(hWnd, "The merge radio button is not set yet, please check and save again!", "WARNING", MB_OK);
@@ -375,7 +384,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				string fullVideoPath = videofolderPath + "\\" + string(videoName);
 				if (vio->Get_Video_from_File((char*)fullVideoPath.c_str())){
 					Set_Text(button_handle, "STOP");
-					vio->Play_Video(max(Get_Number(from_handle),0), max(Get_Number(to_handle),0));
+
+					int start = max(Get_Number(from_handle), 0);
+					int end = max(Get_Number(to_handle), 0);
+					start = start > end ? 0 : start;
+					vio->Play_Video(start, end);
+
 					Set_Text(button_handle, "PLAY");
 				}
 				else{
@@ -504,7 +518,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			40, horzSeparatorPos + 130, 80, 40, hWnd, (HMENU)IDC_BUTTON_DO_IT, GetModuleHandle(NULL), NULL);
 
 		int vertSeparatorPos = 170;
-		CreateWindowEx(WS_EX_CLIENTEDGE, "Static", "", SS_ETCHEDVERT | WS_CHILD | WS_VISIBLE, vertSeparatorPos, horzSeparatorPos + 1, 100, 300, hWnd, NULL, GetModuleHandle(NULL), NULL);
+		CreateWindowEx(WS_EX_CLIENTEDGE, "Static", "", SS_ETCHEDVERT | WS_CHILD | WS_VISIBLE, vertSeparatorPos, horzSeparatorPos + 1, 100, 181, hWnd, NULL, GetModuleHandle(NULL), NULL);
 
 		// commoncontrol DLL needs to be loaded (needed for trackbar) 
 		//Attention: also requires <commctrl.h> and comctl32.lib
@@ -556,6 +570,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		//save review result
 		save_button_handle = CreateWindowEx(WS_EX_CLIENTEDGE, "BUTTON", "SAVE", WS_CHILD | WS_VISIBLE,
 			vertSeparatorPos + 275, horzSeparatorPos + 130, 80, 40, hWnd, (HMENU)IDC_BUTTON_SAVE, GetModuleHandle(NULL), NULL);
+
+		horzSeparatorPos += 175;
+		CreateWindowEx(WS_EX_CLIENTEDGE, "Static", "", SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE, 5, horzSeparatorPos, 535, 10, hWnd, NULL, GetModuleHandle(NULL), NULL);
+		
+		CreateWindowEx(WS_EX_TRANSPARENT, "Static", "Latest Logs:", WS_CHILD | WS_VISIBLE,
+			10, horzSeparatorPos + 10, 515, 30, hWnd, (HMENU)IDC_STATIC_RESULT, GetModuleHandle(NULL), NULL);
+		result_handle = CreateWindowEx(WS_EX_TRANSPARENT, "STATIC", " Waiting for configurting the output file!", WS_CHILD | WS_VISIBLE,
+			10, horzSeparatorPos + 40, 515, 110, hWnd, (HMENU)IDC_EDIT_RESULT, GetModuleHandle(NULL), NULL);
 
 		EnableAllInteractions(false);
 
@@ -695,6 +717,14 @@ void LoadTypedImage(int type, ImageInfo *imginfo){
 		Set_Text(from_handle, (char*)std::to_string(imginfo->startFrame).c_str());
 		Set_Text(to_handle, (char*)std::to_string(imginfo->endFrame).c_str());
 	}
+	else{
+		if (curMatchImageInfo->videoName.compare(curBaseImageInfo->videoName) == 0){
+			Set_Text(to_handle, (char*)std::to_string(max(curMatchImageInfo->endFrame, curBaseImageInfo->endFrame)).c_str());
+		}
+		else{
+			Set_Text(to_handle, (char*)std::to_string(MAX_FRAME_SEQ).c_str());
+		}
+	}
 }
 
 void HandleMovement(int movement){
@@ -737,8 +767,8 @@ void Display_String(HWND handle, int where_x, int where_y, char* str)
 // returns number contained in a static or edit control
 int Get_Number(HWND handle){
 	char buf[30];
-	int x = GetWindowText(handle, buf, strlen(buf));
-	if (strlen > 0)
+	int x = GetWindowText(handle, buf, 30);
+	if (strlen(buf) > 0)
 	{
 		return atoi(buf);
 	}
@@ -830,10 +860,21 @@ bool saveSpotConfig(int type, int trackID, int spotNum){
 
 bool appendTxtToOutput(string content){
 	if (outputPath.compare("") == 0){
+		MessageBox(hWnd, "Save log failed. Please set up output file and try to save again!", "WARNING", MB_OK);
 		return false;
 	}
 
 	outputStream << content << endl;
+	outputLog.push_back(content);
+	while (outputLog.size() > SHOW_LOG_SIZE){
+		outputLog.pop_front();
+	}
+
+	string log = "";
+	for (int i = 0; i < outputLog.size(); i++){
+		log += " " + outputLog.at(i) + "\n";
+	}
+	Set_Text(result_handle, (char*)log.c_str());
 	return true;
 }
 
